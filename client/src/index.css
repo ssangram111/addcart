@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;1,300&display=swap');
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ==================== */
+.registerform{
+  margin-top:70px;
+width: 40% !important;
+background: #65647C;
+}
+
+.headingh1{
+  background: rgb(59, 64, 82) !important;
+background: linear-gradient(90deg, rgb(74, 81, 102) 16%, rgba(6,6,57,1) 54%, rgb(50, 50, 71) 100%) !important;
+}
