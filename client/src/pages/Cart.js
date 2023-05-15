@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Layout from "../components/layout/Layout";
 import { Box } from "./Styled";
 import { Cartcontext } from "../context/Contex";
@@ -8,37 +8,71 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 export const Cart = () => {
-  const Globalstate = useContext(Cartcontext);
-  const state = Globalstate.state;
-  const dispatch = Globalstate.dispatch;
-  console.log(state, "state print");
-  const total = state.reduce((total, item) => {
-    return Math.floor(total + item.price * item.quantity);
-  }, 0);
+  const [data, setdata] = useState([]);
+  const [total, settotal] = useState(0);
 
-  const handleSubmit = async (item) => {
+  // const total = state.reduce((total, item) => {
+  //   return Math.floor(total + item.price * item.quantity);
+  // }, 0);
 
-    console.log(item,"item added in mongodb")
+  const getcart = async () => {
     try {
-      const res = await axios.post("http://localhost:7000/api/add-to-cart", {
-        category: item.category,
-        description: item.description,
-        u_id: item.id,
-        image: item.image,
-        price: item.price,
-        quantity: item.quantity,
-        title: item.title,
+      const res = await axios.get("http://localhost:7000/api/getcart");
+      console.log(res.data.cart);
+      setdata(res.data.cart);
+
+      const cartData = res.data.cart;
+      let total = 0;
+      cartData.forEach((element) => {
+        total = total + element.price * element.quantity;
       });
+      settotal(total);
     } catch (error) {
-      console.log(error,"during post data");
+      console.log(error, "during post data");
     }
   };
+  const updatecart = async (id, quantity, calc) => {
+    try {
+      if (calc === "sum") {
+        const res = await axios.put(
+          `http://localhost:7000/api/update-cart/${id}`,
+          {
+            quantity: ++quantity,
+          }
+        );
+        getcart();
+      } else if (calc === "subtract") {
+        const res = await axios.put(
+          `http://localhost:7000/api/update-cart/${id}`,
+          {
+            quantity: --quantity,
+          }
+        );
+        getcart();
+      }
+   
+    } catch (error) {}
+  };
+  const handleremovecart = async (id) => {
+    try {
+      await axios.delete(`http://localhost:7000/api/cart-delete/${id}`);
+      const tempstate3 = data.filter((item) => item.u_id !== id);
+      getcart();
+      setdata(tempstate3);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    getcart();
+  }, []);
+
   return (
     <Layout>
       <Box>
-        {state.length > 0 ? (
+        {data.length > 0 ? (
           <div className="cart">
-            {state.map((item, index) => {
+            {data.map((item, index) => {
               return (
                 <div
                   className="card p-2 d-flex flex-row justify-content-between"
@@ -46,14 +80,17 @@ export const Cart = () => {
                 >
                   <img src={item.image} className="m-3" alt="" />
                   <p>{item.title}</p>
-                  <p className="m-5">{item.quantity * item.price}</p>
+                  <p className="m-5">
+                    {(item.quantity * item.price).toFixed(2)}
+                  </p>
                   <div className="quantity d-flex flex-row m-5">
+                    {}
                     <Button
                       onClick={() => {
                         if (item.quantity > 1) {
-                          dispatch({ type: "DECREASE", payload: item });
+                          updatecart(item.u_id, item.quantity, "subtract");
                         } else {
-                          dispatch({ type: "REMOVE", payload: item });
+                          handleremovecart(item.u_id);
                         }
                       }}
                     >
@@ -62,7 +99,7 @@ export const Cart = () => {
                     <p>{item.quantity}</p>
                     <Button
                       onClick={() =>
-                        dispatch({ type: "INCREASE", payload: item })
+                        updatecart(item.u_id, item.quantity, "sum")
                       }
                     >
                       +
@@ -70,21 +107,18 @@ export const Cart = () => {
                   </div>
                   <Button
                     className="btn btn-danger"
-                    onClick={() => dispatch({ type: "REMOVE", payload: item })}
+                    onClick={() => handleremovecart(item.u_id)}
                   >
                     Remove
                   </Button>
                 </div>
               );
             })}
-            {state.length > 0 && (
+            {data.length > 0 && (
               <div className="total">
-                <h2>Total: {total}</h2>
+                <h2>Total: {total.toFixed(2)}</h2>
               </div>
             )}
-            <div>
-              <Button onSubmit={handleSubmit}>Place order</Button>
-            </div>
           </div>
         ) : (
           <div className="container-fluid  mt-150">

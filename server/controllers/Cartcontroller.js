@@ -48,3 +48,48 @@ export const cartDeleteController = async (req, res) => {
     });
   }
 };
+
+//get all cart details
+
+export const getcartcontroller = async (req, res) => {
+  try {
+    const cart = await Cart.find({});
+    res.status(200).send({
+      success: true,
+      message: "All cart List",
+      cart,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      error,
+      message: "Error while getting all cart",
+    });
+  }
+};
+
+//cart update
+export const updateCartController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {quantity} = req.body;
+    const cart = await Cart.findOneAndUpdate(
+      { u_id: id },
+      { quantity: quantity},
+      { new: true }
+    );
+    res.status(200).send({
+      success: true,
+      messsage: "Cart Updated Successfully",
+      cart,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      error,
+      message: "Error while updating cart",
+    });
+  }
+};

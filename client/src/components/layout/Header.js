@@ -1,12 +1,12 @@
 import { Button, Container, Nav, Navbar } from "react-bootstrap";
-import { useContext } from "react";
+import { useState,useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Cartcontext } from "../../context/Contex";
 import { UseAuth } from "../../context/AuthProvider";
 import toast from "react-hot-toast";
-import { Badge } from 'antd';
+import axios from "axios";
 function Header() {
   const [auth, setauth] = UseAuth();
+  const [count,setcount]= useState();
 
   const handleLogout = () => {
     setauth({
@@ -18,8 +18,26 @@ function Header() {
     localStorage.removeItem("auth");
     toast.success("Logged out Successfully");
   };
-  const Globalstate = useContext(Cartcontext);
-  const state = Globalstate.state;
+
+  const getcart = async () => {
+    try {
+      const res = await axios.get("http://localhost:7000/api/getcart");
+      setcount(res.data.cart.length);
+    } catch (error) {
+      console.log(error, "during post data");
+    }
+  };
+
+  useEffect(() => {
+   getcart();
+   const interval = setInterval(() => {
+    getcart();
+  }, 1000); 
+  return () => {
+    clearInterval(interval);
+  };
+  }, [])
+  
   return (
     <Navbar
       collapseOnSelect
@@ -51,7 +69,7 @@ function Header() {
                   Category
                 </Nav.Link>
                 <Nav.Link as={Link} to="/Cart">
-                  Cart({state.length})
+                  Cart({count})
                 </Nav.Link>
                 <Nav.Link
                   onClick={handleLogout}
